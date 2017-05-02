@@ -33,9 +33,7 @@ class ChatMessages extends Component {
 						</div>
 					</div>
 				: 	<div className="row">
-						<div className="col s12">
-							<Username socket={socket}/>
-						</div>
+						<h5> Hi there, {username} </h5>
 					</div>
 			)
 			

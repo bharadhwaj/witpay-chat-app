@@ -67,9 +67,9 @@ class Index extends Component {
 				this.props.dispatch({ type : 'CURRENT_ONLINE_USERS', payload : response })
 			})	
 
-			socket.on('client:nameChangeSuccessBroadcast', response => {
-				this.props.dispatch({ type : 'CURRENT_ONLINE_USERS', payload : response })
-			})	
+			// socket.on('client:nameChangeSuccessBroadcast', response => {
+			// 	this.props.dispatch({ type : 'CURRENT_ONLINE_USERS', payload : response })
+			// })	
 			
 			socket.on('client:userLeft', response => {
 				console.log('USER LEFT')
