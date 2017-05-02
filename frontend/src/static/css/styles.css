@@ -1,0 +1,27 @@
+.strikethrough + label {
+	text-decoration: line-through;
+}
+
+.close-button {
+	cursor: pointer;
+}
+
+#toast-container {
+	top: 10%;
+	left: 41%;
+	right: auto !important;
+	bottom: auto !important;
+}
+
+.bottom-stick {
+	position: fixed;
+	bottom: -1vh;
+	width: 100%;
+	margin-bottom: -1vh; 
+}
+
+.loader-class {
+	margin: auto;
+	position: absolute;
+	top: 0; left: 0; bottom: 0; right: 0;
+}
