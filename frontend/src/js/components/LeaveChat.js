@@ -5,14 +5,15 @@ import { connect } from 'react-redux'
 	return {
 		roomName : store.chatReducer.roomName,
 		username : store.chatReducer.username,
+		sessionId : store.chatReducer.sessionId,
 	}
 })
 class LeaveChat extends Component {
 
 	leaveChat() {
 		console.log('INSIDE LEAVE CHAT')
-		const { socket, username, roomName } = this.props
-		socket.emit('server:disconnect', { room : roomName, user: username })
+		const { socket, username, roomName, sessionId } = this.props
+		socket.emit('server:disconnect', { room : roomName, user: sessionId })
 		this.props.dispatch({ type : 'CURRENT_ONLINE_USERS', payload : [] })
 		this.props.dispatch({ type : 'LOGOUT_USER' })
 		console.log('SENT DISCONNECT REQUEST')
