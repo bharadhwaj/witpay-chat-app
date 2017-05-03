@@ -4,6 +4,7 @@ import { connect } from 'react-redux'
 
 import PreLoader from '../components/PreLoader'
 import Navbar from '../components/Navbar'
+import Username from '../components/Username'
 import ChatMessages from '../components/ChatMessages'
 import ChatBox from '../components/ChatBox'
 import OnlineUsers from '../components/OnlineUsers'
@@ -26,56 +27,22 @@ class Index extends Component {
 		const { roomName, loading, onlineUsers, online } = this.props
 		socket.on('connect', () => {
 			socket.emit('server:connect')
+			let sessionId = socket.io.engine.id
 
-			sessionId = socket.io.engine.id
-			localStorage.setItem('uid', sessionId)
-
-			socket.emit('server:joinRoomRequest', { room : roomName, user: sessionId })
-
-			this.props.dispatch({ type : 'SET_USERNAME', payload : sessionId })
-
-
-			socket.on('client:joinRoomRequestSuccess', response => {
-				console.log('JOIN REQUEST SUCCESS')
-				socket.emit('server:joinRoom', { room : response.roomName, user : response.userName, inviteJoin : false })
-			})
-
-			socket.on('client:joinRoomSuccess', response => {
-				console.log('Join Success :)', response)
-				this.props.dispatch({ type : 'CURRENT_ONLINE_USERS', payload : response.onlineUsers })
-				if(!response.inviteJoin)
-					this.props.dispatch({ type : 'CURRENT_ROOMNAME', payload : response.roomName })
-				this.props.dispatch({ type : 'LOADED' })
-			})
-
-			socket.on('client:joinRoomRequestFailure', response => {
-				socket.emit('server:createRoom',  { room : roomName, user: sessionId })
-			})
-
-			socket.on('client:askToJoinRoom', response => {
-				console.log('ASK TO JOIN', response)
-				if (sessionId === response.user)
-					socket.emit('server:joinRoom', { room : response.room, user: response.user, inviteJoin : true })
-			})
-
-			socket.on('client:createRoomResponse', response => {
-				console.log('CREATE ROOM RESPONSE', response)
-				socket.emit('server:joinRoom', { room : response.roomName, user: response.userName, inviteJoin : false })
-			})
+			this.props.dispatch({ type : 'LOADED' })
 
 			socket.on('client:userJoined', response => {
 				this.props.dispatch({ type : 'CURRENT_ONLINE_USERS', payload : response })
 			})	
-
-			// socket.on('client:nameChangeSuccessBroadcast', response => {
-			// 	this.props.dispatch({ type : 'CURRENT_ONLINE_USERS', payload : response })
-			// })	
 			
 			socket.on('client:userLeft', response => {
 				console.log('USER LEFT')
 				this.props.dispatch({ type : 'CURRENT_ONLINE_USERS', payload : response })
 			})
-			
+			socket.on('client:userNameList', response => { 
+				this.props.dispatch({ type : 'ADD_MAPPING', payload : response })
+			})
+
 			window.addEventListener('beforeunload', event => {
 				event.preventDefault()
 				socket.emit('server:disconnect', { room : roomName, user: sessionId })
@@ -104,25 +71,32 @@ class Index extends Component {
 					</div>
 				:	<div>
 						<Navbar/>
-						<div className="row">
-							<div className="card-panel col s9">
-								<ChatMessages socket={socket}/>
-							</div>
-							<div className="col s3">
-								<OnlineUsers socket={socket}/>
-							</div>
-						</div>
 						{
 							this.props.online 
-							? 	<div className="bottom-stick row card-panel teal lighten-5">
-									<div className="col m11">
-										<ChatBox socket={socket}/>
+								?	<div>
+									<div className="row">
+										<div className="card-panel col s9">
+											<ChatMessages socket={socket}/>
+										</div>
+										<div className="col s3">
+											<OnlineUsers socket={socket}/>
+										</div>
 									</div>
-									<div className="col m1">
-										<LeaveChat socket={socket}/>
+									<div className="bottom-stick row card-panel teal lighten-5">
+									{
+										(this.props.roomName !== 'GENERAL')
+											?	<div className="col m11">
+													<ChatBox socket={socket}/>
+												</div>		
+											: null								
+									}
+
+										<div className="col m1">
+											<LeaveChat socket={socket}/>
+										</div>
 									</div>
-								</div>
-							: 	null
+									</div>
+								: 	<Username socket={socket}/>
 						}
 						
 						

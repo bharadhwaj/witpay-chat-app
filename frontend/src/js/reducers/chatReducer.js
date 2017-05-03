@@ -1,9 +1,11 @@
 export default function reducer(state = { 
 	chat : [ ],
-	online : true,
+	online : false,
 	username : null,
+	sessionId : null,
 	roomName : 'GENERAL',
 	onlineUsers : [ ],
+	nameMapping : { },
 }, action) {
 	
 	switch(action.type) {
@@ -14,6 +16,14 @@ export default function reducer(state = {
 				chat : [...state.chat, action.payload],
 			}
 		}
+
+		case "ADD_MAPPING": {
+			return {
+				...state,
+				nameMapping : action.payload,
+			}
+		}
+
 
 		case "CURRENT_ONLINE_USERS": {
 			return {
@@ -32,7 +42,8 @@ export default function reducer(state = {
 		case "SET_USERNAME": {
 			return {
 				...state,
-				username : action.payload,
+				username : action.payload.name,
+				sessionId : action.payload.sessionId,
 			}
 		}
 
@@ -47,6 +58,13 @@ export default function reducer(state = {
 			return {
 				...state,
 				online : false,
+			}
+		}
+
+		case "LOGON_USER": {
+			return {
+				...state,
+				online : true,
 			}
 		}
 		

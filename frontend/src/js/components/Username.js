@@ -5,6 +5,9 @@ import { connect } from 'react-redux'
 	return {
 		roomName : store.chatReducer.roomName,
 		username : store.chatReducer.username,
+		onlineUsers : store.chatReducer.onlineUsers,
+		online : store.chatReducer.online,
+		nameMapping : store.chatReducer.nameMapping,
 	}
 })
 class Username extends Component {
@@ -15,16 +18,47 @@ class Username extends Component {
 
 	setUsername(event) {
 		event.preventDefault()
-		const { socket, username } = this.props
+		const { socket, username, onlineUsers, online, nameMapping, roomName } = this.props
 		const { name } = this.state
 		if (this.state.name.trim() !== '') {
-			console.log('Name Change from ', username, ' to ', name)
-			socket.emit('server:changeUsername', { oldUsername : username, newUsername: name })
-			socket.on('client:nameChangeSuccess', response => {
-				this.props.dispatch({ type : 'SET_USERNAME', payload : response.username })
+
+			let sessionId = socket.io.engine.id
+			localStorage.setItem('uid', sessionId)
+
+			socket.emit('server:joinRoomRequest', { room : roomName, user: sessionId })
+
+			socket.on('client:joinRoomRequestSuccess', response => {
+				console.log('JOIN REQUEST SUCCESS')
+				socket.emit('server:joinRoom', { room : response.roomName, user : response.userName, inviteJoin : false })
+			})
+
+			socket.on('client:joinRoomSuccess', response => {
+				console.log('Join Success :)', response)
+				this.props.dispatch({ type : 'CURRENT_ONLINE_USERS', payload : response.onlineUsers })
+				if(!response.inviteJoin)
+					this.props.dispatch({ type : 'CURRENT_ROOMNAME', payload : response.roomName })
+				socket.emit('server:setUsername', { id : sessionId, name: name })
+				this.props.dispatch({ type : 'SET_USERNAME', payload : { sessionId : sessionId, name : name} })
+				this.props.dispatch({ type : 'LOGON_USER'})
+			})
+
+			socket.on('client:joinRoomRequestFailure', response => {
+				socket.emit('server:createRoom',  { room : response.roomName, user: sessionId })
+			})
+
+			socket.on('client:askToJoinRoom', response => {
+				console.log('ASK TO JOIN', response)
+				if (sessionId === response.user)
+					socket.emit('server:joinRoom', { room : response.room, user: response.user, inviteJoin : true })
+			})
+
+			socket.on('client:createRoomResponse', response => {
+				console.log('CREATE ROOM RESPONSE', response)
+				socket.emit('server:joinRoom', { room : response.roomName, user: response.userName, inviteJoin : false })
 			})
 			
 			this.setState({ name : '' })
+
 		} else {
 			Materialize.toast('Name can\'t be blank.', 2000, 'red lighten-1')
 		}

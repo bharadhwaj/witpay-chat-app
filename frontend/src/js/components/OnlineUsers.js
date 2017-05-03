@@ -6,7 +6,8 @@ import { connect } from 'react-redux'
 		onlineUsers : store.chatReducer.onlineUsers,
 		username : store.chatReducer.username,
 		roomName : store.chatReducer.roomName,
-		chat : store.chatReducer.chat
+		chat : store.chatReducer.chat,	
+		nameMapping : store.chatReducer.nameMapping,
 	}
 })
 class OnlineUsers extends Component {
@@ -28,12 +29,12 @@ class OnlineUsers extends Component {
 	}
 	
 	getRoomName(currentUser) {
-		const { username } = this.props
+		const { username, nameMapping } = this.props
 		return currentUser === 'GENERAL'
 							? 'GENERAL'
-							: username < currentUser 
-								? username + '-' + currentUser
-								: currentUser + '-' + username
+							: username < nameMapping[currentUser] 
+								? username + '-' + nameMapping[currentUser]
+								: nameMapping[currentUser] + '-' + username
 
 	}
 
@@ -50,7 +51,7 @@ class OnlineUsers extends Component {
 	render() {
 		
 		let unreadMessage = [ ]
-		const { onlineUsers, chat, username, roomName } = this.props 
+		const { onlineUsers, chat, username, roomName, nameMapping } = this.props 
 
 		for (let thread of chat) {
 			console.log('THREAD ROOMS: ', thread)
@@ -64,8 +65,8 @@ class OnlineUsers extends Component {
 
 		console.log('ALL USERS', onlineUsers, unreadMessage)
 		const onlineList = onlineUsers
-							.filter(user => user !== username)
-							.map((user, id) => <a style={{ cursor : 'pointer' }} onClick={() => this.privateChat(user)} key={id} className="collection-item">{user}{unreadMessage[this.getRoomName(user)] ? <span class="new badge">{unreadMessage[this.getRoomName(user)]}</span> : null}</a>)
+							.filter(user => nameMapping[user] !== username)
+							.map((user, id) => <a style={{ cursor : 'pointer' }} onClick={() => this.privateChat(user)} key={id} className="collection-item">{nameMapping[user]}{unreadMessage[this.getRoomName(user)] ? <span class="new badge">{unreadMessage[this.getRoomName(user)]}</span> : null}</a>)
 		return (
 			<div class="collection with-header">
 				<div class="collection-header">

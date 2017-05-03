@@ -3,6 +3,7 @@ module.exports = (app, server) => {
 	var io 	  = require('socket.io').listen(server)
 	global.io = io
 	var allUserArray = [ ]
+	var nameList = { }
 	io.on('connection', socket => {
 		socket.on('server:connect', () => {
 			console.log('CONNECTION : Client joined.')
@@ -25,7 +26,8 @@ module.exports = (app, server) => {
 				console.log('JOIN FAILED')
 				var response = {
 					status : 'FAILED',
-					message : 'Room doesn\'t exists. Please create a room first.'
+					message : 'Room doesn\'t exists. Please create a room first.',
+					roomName : roomName,
 				}
 				socket.emit('client:joinRoomRequestFailure', response)
 			}
@@ -34,6 +36,13 @@ module.exports = (app, server) => {
 		socket.on('server:askToJoinRoom', data => {
 			console.log('ASK TO JOIN REQUEST: ', data)
 			io.sockets.in('GENERAL').emit('client:askToJoinRoom', data)
+		})
+
+		socket.on('server:setUsername', data => {
+			var id = data.id
+			var name = data.name
+			nameList[id] = name
+			io.sockets.in('GENERAL').emit('client:userNameList', nameList)
 		})
 
 		socket.on('server:createRoom', data => {
@@ -87,7 +96,6 @@ module.exports = (app, server) => {
 		socket.on('server:changeUsername', data => { 
 			var oldUsername = data.oldUsername
 			var newUsername = data.newUsername
-			console.log('Name change request: From: ', oldUsername, ', To: ', newUsername, '--- \n',  io.sockets.adapter.rooms['GENERAL'])
 			var allUserArray = Object.keys(io.sockets.adapter.rooms['GENERAL'])
 			if (allUserArray.indexOf(newUsername) > -1) {
 				socket.emit('client:nameChangeFailure', { message : 'Name already exist' })
